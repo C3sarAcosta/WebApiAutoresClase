@@ -2,7 +2,7 @@
 {
     public class RespuestaAutenticacion
     {
-        public string token { get; set; }
+        public string Token { get; set; }
         public DateTime Expiracion { get; set; }
     }
 }
