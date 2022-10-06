@@ -14,11 +14,14 @@ namespace WebApiAutoresClase.Controllers
     {
         private readonly UserManager<IdentityUser> _userManager;
         private readonly IConfiguration _configuration;
+        private readonly SignInManager<IdentityUser> _signInManager;    
         public CuentasController(UserManager<IdentityUser> userManager,
-            IConfiguration configuration)
+            IConfiguration configuration,
+            SignInManager<IdentityUser> signInManager)
         {
             _userManager = userManager; 
             _configuration = configuration;
+            _signInManager = signInManager;
         }
 
         //EndPoint para registrar usuarios
@@ -30,7 +33,7 @@ namespace WebApiAutoresClase.Controllers
 
             if (resultado.Succeeded)
             {
-                return await ContruirToken(credencialesUsuario);
+                return await ConstruirToken(credencialesUsuario);
             }
             else
             {
@@ -38,7 +41,34 @@ namespace WebApiAutoresClase.Controllers
             }
         }
 
-        private async Task<RespuestaAutenticacion> ContruirToken(CredencialesUsuario credencialesUsuario)
+        [HttpPost("login")]
+        public async Task<ActionResult<RespuestaAutenticacion>> Login(CredencialesUsuario credencialesUsuario)
+        {
+            var resultado = await _signInManager.PasswordSignInAsync(credencialesUsuario.Email,
+                credencialesUsuario.Password, isPersistent: false, lockoutOnFailure: false);
+
+            if (resultado.Succeeded)
+            {
+                return await ConstruirToken(credencialesUsuario);
+            }
+            else
+            {
+                return BadRequest("Login Incorrecto");
+            }
+        }
+
+        [HttpGet("renovarToken")]
+        public async Task<ActionResult<RespuestaAutenticacion>> Renovar()
+        {
+            var emailClaim = HttpContext.User.Claims.Where(x  => x.Type == "email").FirstOrDefault();
+            var credencialesUsuario = new CredencialesUsuario()
+            {
+                Email = emailClaim.Value
+            };
+            return await ConstruirToken(credencialesUsuario);
+        }
+
+        private async Task<RespuestaAutenticacion> ConstruirToken(CredencialesUsuario credencialesUsuario)
         {
             var claims = new List<Claim>()
             {
