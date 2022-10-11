@@ -68,6 +68,28 @@ namespace WebApiAutoresClase.Controllers
             return await ConstruirToken(credencialesUsuario);
         }
 
+        [HttpPost("HacerAdmin")]
+        public async Task<ActionResult> HacerAdmin(AgregarRol agregarRol)
+        {
+            var usaurio = await _userManager.FindByEmailAsync(agregarRol.Email);
+            if(usaurio != null)
+            {
+                await _userManager.AddClaimAsync(usaurio, new Claim("esAdmin", "1"));
+            }
+            return BadRequest();
+        }
+
+        [HttpPost("RemoverAdmin")]
+        public async Task<ActionResult> RemoverAdmin(AgregarRol agregarRol)
+        {
+            var usaurio = await _userManager.FindByEmailAsync(agregarRol.Email);
+            if (usaurio != null)
+            {
+                await _userManager.RemoveClaimAsync(usaurio, new Claim("esAdmin", "1"));
+            }
+            return BadRequest();
+        }
+
         private async Task<RespuestaAutenticacion> ConstruirToken(CredencialesUsuario credencialesUsuario)
         {
             var claims = new List<Claim>()
