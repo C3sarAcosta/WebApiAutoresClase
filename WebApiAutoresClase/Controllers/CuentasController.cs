@@ -1,4 +1,6 @@
-﻿using Microsoft.AspNetCore.Identity;
+﻿using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.IdentityModel.Tokens;
 using System.IdentityModel.Tokens.Jwt;
@@ -10,6 +12,7 @@ namespace WebApiAutoresClase.Controllers
 {
     [ApiController]
     [Route("api/[controller]")]
+    //[Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme)]
     public class CuentasController : Controller
     {
         private readonly UserManager<IdentityUser> _userManager;
@@ -75,17 +78,22 @@ namespace WebApiAutoresClase.Controllers
             if(usaurio != null)
             {
                 await _userManager.AddClaimAsync(usaurio, new Claim("esAdmin", "1"));
+                return NoContent();
             }
             return BadRequest();
         }
 
+
         [HttpPost("RemoverAdmin")]
+        //Acceso solo a usaurios Logeados
+        [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme, Policy = "EsAdmin")]
         public async Task<ActionResult> RemoverAdmin(AgregarRol agregarRol)
         {
             var usaurio = await _userManager.FindByEmailAsync(agregarRol.Email);
             if (usaurio != null)
             {
                 await _userManager.RemoveClaimAsync(usaurio, new Claim("esAdmin", "1"));
+                return NoContent();
             }
             return BadRequest();
         }
@@ -97,8 +105,13 @@ namespace WebApiAutoresClase.Controllers
                 new Claim("email", credencialesUsuario.Email),
             };
 
-            //Agregar claim
-            //claims.AddRange()
+            //Agregar claims
+            var usuario = await _userManager.FindByEmailAsync(credencialesUsuario.Email);
+            //Obtener claims de la base de datos
+            var claimsDB = await _userManager.GetClaimsAsync(usuario);
+            //Anexamos los claims
+            claims.AddRange(claimsDB);
+            
 
             var llave = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(_configuration["LlaveJWT"]));
             var creds = new SigningCredentials(llave, SecurityAlgorithms.HmacSha256);
