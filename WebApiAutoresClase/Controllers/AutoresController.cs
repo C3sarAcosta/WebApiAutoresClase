@@ -33,7 +33,27 @@ namespace WebApiAutoresClase.Controllers
             _context.Add(autor);
             await _context.SaveChangesAsync();
 
-            return Ok(autor);
+            var autorDTO = _mapper.Map<AutorDTO>(autor);
+            return Ok(autorDTO);
+        }
+
+        [HttpGet("primero")]
+        public async Task<ActionResult<AutorDTO>> PrimerAutor()
+        {
+            var autor = await _context.Autores.FirstOrDefaultAsync();
+            return _mapper.Map<AutorDTO>(autor);
+        }
+
+        [HttpGet("{id:int}/{nombre?}", Name = "obtenerAutor")]
+        public async Task<ActionResult<AutorDTO>> Get(int id, string nombre)
+        {
+            var autor = await _context.Autores.FirstOrDefaultAsync(x => x.Id == id);
+            if(autor == null)
+            {
+                return NotFound(); 
+            }
+
+            return _mapper.Map<AutorDTO>(autor);
         }
     }
 }
