@@ -4,6 +4,7 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
 using System.Text;
+using System.Text.Json.Serialization;
 using WebApiAutoresClase.Data;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -50,6 +51,11 @@ builder.Services.AddDbContext<ApplicationDbContext>(options =>
 builder.Services.AddIdentity<IdentityUser, IdentityRole>()
     .AddEntityFrameworkStores<ApplicationDbContext>()
     .AddDefaultTokenProviders();
+
+//Ignorar Cyclos repetidos
+builder.Services.AddControllers()
+    .AddJsonOptions(x => x.JsonSerializerOptions.ReferenceHandler = ReferenceHandler.IgnoreCycles)
+    .AddNewtonsoftJson();
 
 //Configuracion Automapper
 builder.Services.AddAutoMapper(typeof(Program));
